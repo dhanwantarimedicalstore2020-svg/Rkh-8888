@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Header } from './components/Header';
 import { ActiveTab, Navigation } from './components/Navigation';
 import { TodayView } from './components/today/TodayView';
@@ -24,6 +24,9 @@ import {
   applyMinimumDayToRecord,
   restoreNormalModeRecord,
 } from './services/operatingModeService';
+import { initializeNativeStatusBar } from './services/nativeStatusBarService';
+import { initializeNativeBackButton, setRootBackHandler } from './services/nativeBackService';
+import { useRegisterBackDismiss } from './hooks/useRegisterBackDismiss';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<ActiveTab>('today');
@@ -36,6 +39,27 @@ export default function App() {
   // Modal visibility states
   const [isIdeaModalOpen, setIsIdeaModalOpen] = useState(false);
   const [isFlexibleModalOpen, setIsFlexibleModalOpen] = useState(false);
+
+  // Android hardware back button registration for root modals
+  useRegisterBackDismiss(isIdeaModalOpen, () => setIsIdeaModalOpen(false));
+  useRegisterBackDismiss(isFlexibleModalOpen, () => setIsFlexibleModalOpen(false));
+
+  // Initialize Native Android Status Bar & Back Button
+  useEffect(() => {
+    initializeNativeStatusBar();
+    initializeNativeBackButton();
+  }, []);
+
+  // Configure Root Back Handler: if user is on a sub-tab, hardware back returns to 'today'
+  useEffect(() => {
+    setRootBackHandler(() => {
+      if (activeTab !== 'today') {
+        setActiveTab('today');
+        return true;
+      }
+      return false;
+    });
+  }, [activeTab]);
 
   // Midnight Auto-Refresh Listener: Handles day boundary transitions seamlessly
   React.useEffect(() => {
@@ -120,7 +144,7 @@ export default function App() {
       />
 
       {/* Main Content Area */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 pt-5 pb-8">
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 pt-5 pb-24">
         {activeTab === 'today' && (
           <TodayView
             record={currentRecord}

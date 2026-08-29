@@ -75,7 +75,7 @@ export const Navigation: React.FC<NavigationProps> = ({ activeTab, onTabChange }
     <nav
       id="main-bottom-navigation"
       aria-label="Main Navigation"
-      className="fixed bottom-0 left-0 right-0 z-40 bg-[#FBF9F5]/98 backdrop-blur-lg border-t border-[#E8E2D6] py-1 px-1 sm:px-4 shadow-lg"
+      className="fixed bottom-0 left-0 right-0 z-40 bg-[#FBF9F5]/98 backdrop-blur-lg border-t border-[#E8E2D6] pt-1 pb-[calc(env(safe-area-inset-bottom,0px)+4px)] px-1 sm:px-4 shadow-lg"
     >
       <div
         role="tablist"

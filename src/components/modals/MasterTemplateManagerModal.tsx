@@ -22,6 +22,7 @@ import {
 } from '../../types';
 import { INITIAL_MASTER_TEMPLATES, PILLARS_CONFIG } from '../../constants/masterSchedule';
 import { loadTemplates, saveTemplates, updateRecurringTemplate } from '../../services/storageService';
+import { useRegisterBackDismiss } from '../../hooks/useRegisterBackDismiss';
 
 interface MasterTemplateManagerModalProps {
   isOpen: boolean;
@@ -44,6 +45,8 @@ export const MasterTemplateManagerModal: React.FC<MasterTemplateManagerModalProp
   onClose,
   onTemplatesUpdated,
 }) => {
+  useRegisterBackDismiss(isOpen, onClose);
+
   const [selectedDay, setSelectedDay] = useState<DayOfWeek>('Monday');
   const [templates, setTemplates] = useState<MasterWeeklyTemplate>(() => loadTemplates());
   const [editingItemId, setEditingItemId] = useState<string | null>(null);

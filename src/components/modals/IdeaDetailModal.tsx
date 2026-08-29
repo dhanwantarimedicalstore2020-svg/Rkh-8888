@@ -55,6 +55,7 @@ import { ValidationStagePanel } from '../entrepreneurship/ValidationStagePanel';
 import { PrototypesStagePanel } from '../entrepreneurship/PrototypesStagePanel';
 import { ExperimentsStagePanel } from '../entrepreneurship/ExperimentsStagePanel';
 import { IdeaScoringPanel } from '../entrepreneurship/IdeaScoringPanel';
+import { useRegisterBackDismiss } from '../../hooks/useRegisterBackDismiss';
 
 interface IdeaDetailModalProps {
   idea: IdeaItem | null;
@@ -95,6 +96,8 @@ export const IdeaDetailModal: React.FC<IdeaDetailModalProps> = ({
   onIdeaUpdated,
   initialTab = 'details',
 }) => {
+  useRegisterBackDismiss(isOpen, onClose);
+
   const [activeTab, setActiveTab] = useState<'details' | 'research' | 'validation' | 'prototype' | 'experiment' | 'scoring' | 'quality'>('details');
   const [title, setTitle] = useState('');
   const [problemObserved, setProblemObserved] = useState('');

@@ -3,6 +3,7 @@ import { Lightbulb, Sparkles, X, Check, Tag, MapPin, AlertCircle, ChevronDown, C
 import { IdeaItem, IdeaPriority, IdeaStatus } from '../../types';
 import { formatLocalISODate, formatReadableDate, getISOWeek, getTodayDateString } from '../../utils/dateUtils';
 import { upsertIdea } from '../../services/storageService';
+import { useRegisterBackDismiss } from '../../hooks/useRegisterBackDismiss';
 
 interface IdeaCaptureModalProps {
   isOpen: boolean;
@@ -30,6 +31,9 @@ export const IdeaCaptureModal: React.FC<IdeaCaptureModalProps> = ({
   onSaveIdea,
   currentDateStr,
 }) => {
+  // Android hardware back button registration
+  useRegisterBackDismiss(isOpen, onClose);
+
   // Required core observation fields
   const [problem, setProblem] = useState('');
   const [targetAudience, setTargetAudience] = useState('');

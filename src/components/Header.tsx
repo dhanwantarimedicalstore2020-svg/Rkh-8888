@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { DailyRecord, OperatingMode } from '../types';
 import { formatReadableDate, formatShortDate, getTodayDateString, offsetDays } from '../utils/dateUtils';
+import { useNetworkStatus } from '../hooks/useNetworkStatus';
 
 interface HeaderProps {
   currentRecord: DailyRecord;
@@ -26,6 +27,7 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenQuickIdea,
 }) => {
   const [showModeDropdown, setShowModeDropdown] = useState(false);
+  const isOnline = useNetworkStatus();
   const todayStr = getTodayDateString();
   const isToday = currentRecord.date === todayStr;
 
@@ -64,6 +66,17 @@ export const Header: React.FC<HeaderProps> = ({
                 <span className="font-slab font-extrabold text-lg text-[#1E2022] tracking-tight">RKH 8888</span>
                 <span className="text-[10px] font-mono-code px-1.5 py-0.5 rounded bg-[#EFE9DC] text-[#635E55] border border-[#DDD5C5]">
                   OS v1.0
+                </span>
+                <span
+                  className={`text-[10px] font-mono-code px-1.5 py-0.5 rounded border flex items-center gap-1 transition-colors ${
+                    isOnline
+                      ? 'bg-[#ECFDF5] text-[#166534] border-[#BBF7D0]'
+                      : 'bg-[#FEF2F2] text-[#991B1B] border-[#FECACA]'
+                  }`}
+                  title={isOnline ? 'Online — local-first persistence active' : 'Offline — local-first persistence active'}
+                >
+                  <span className={`w-1.5 h-1.5 rounded-full ${isOnline ? 'bg-[#16A34A]' : 'bg-[#DC2626]'}`} />
+                  {isOnline ? 'Online' : 'Offline'}
                 </span>
               </div>
               <p className="text-[11px] text-[#7A746B] font-medium hidden sm:block">

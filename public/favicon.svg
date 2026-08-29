@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1E2022" />
+      <stop offset="100%" stop-color="#141618" />
+    </linearGradient>
+    <linearGradient id="accentGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#E5DEC9" />
+      <stop offset="100%" stop-color="#C7BEA9" />
+    </linearGradient>
+  </defs>
+  <!-- Background -->
+  <rect width="512" height="512" fill="transparent" />
+  <rect x="25.6" y="25.6" width="460.8" height="460.8" rx="112.64" fill="url(#bgGrad)" stroke="#3A3834" stroke-width="10.24" />
+  
+  <!-- Stylized 88 Monogram -->
+  <g transform="translate(256, 256)">
+    <!-- Left 8 -->
+    <g transform="translate(-101.376, 0)">
+      <circle cx="0" cy="-59.904" r="69.12" fill="none" stroke="url(#accentGrad)" stroke-width="41.472" />
+      <circle cx="0" cy="64.51200000000001" r="82.944" fill="none" stroke="url(#accentGrad)" stroke-width="41.472" />
+    </g>
+    <!-- Right 8 -->
+    <g transform="translate(101.376, 0)">
+      <circle cx="0" cy="-59.904" r="69.12" fill="none" stroke="url(#accentGrad)" stroke-width="41.472" />
+      <circle cx="0" cy="64.51200000000001" r="82.944" fill="none" stroke="url(#accentGrad)" stroke-width="41.472" />
+    </g>
+  </g>
+</svg>

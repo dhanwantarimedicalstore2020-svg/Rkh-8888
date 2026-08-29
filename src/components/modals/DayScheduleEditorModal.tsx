@@ -24,6 +24,7 @@ import {
 } from '../../types';
 import { PILLARS_CONFIG } from '../../constants/masterSchedule';
 import { updateRecurringTemplate } from '../../services/storageService';
+import { useRegisterBackDismiss } from '../../hooks/useRegisterBackDismiss';
 
 interface DayScheduleEditorModalProps {
   isOpen: boolean;
@@ -38,6 +39,8 @@ export const DayScheduleEditorModal: React.FC<DayScheduleEditorModalProps> = ({
   record,
   onSaveDayRecord,
 }) => {
+  useRegisterBackDismiss(isOpen, onClose);
+
   const [items, setItems] = useState<ScheduleItemInstance[]>(() => [...record.items]);
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
   const [editScope, setEditScope] = useState<'day_only' | 'recurring_template'>('day_only');

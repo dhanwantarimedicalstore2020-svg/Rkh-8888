@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   Activity,
   AlertCircle,
@@ -17,7 +17,9 @@ import {
   Plus,
   RotateCcw,
   Scale,
+  Share2,
   Shield,
+  Smartphone,
   Trash2,
   Upload,
   X,
@@ -38,6 +40,8 @@ import {
 } from '../../services/operatingModeService';
 import { runAllPhase2BTests, TestCaseResult, TestSuiteSummary } from '../../services/dataIntegrityTests';
 import { MasterTemplateManagerModal } from '../modals/MasterTemplateManagerModal';
+import { Capacitor } from '@capacitor/core';
+import { exportAndSaveBackup, importBackupFromFile } from '../../services/nativeBackupService';
 
 interface SettingsViewProps {
   onDataReset: () => void;
@@ -49,11 +53,21 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onDataReset }) => {
   const [selectedDay, setSelectedDay] = useState<DayOfWeek>('Monday');
   const [showTemplateManager, setShowTemplateManager] = useState(false);
   const [importText, setImportText] = useState('');
+  const [showRawPaste, setShowRawPaste] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
+  const [isImportingFile, setIsImportingFile] = useState(false);
+  const [exportStatus, setExportStatus] = useState<{
+    success: boolean;
+    message: string;
+  } | null>(null);
   const [importStatus, setImportStatus] = useState<{
     success: boolean;
     message: string;
     details?: string[];
   } | null>(null);
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const isNative = Capacitor.isNativePlatform();
 
   // Operating Mode Ranges
   const [modeRanges, setModeRanges] = useState<OperatingModeRange[]>(() => loadModeRanges());
@@ -68,15 +82,50 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onDataReset }) => {
   const [testSummary, setTestSummary] = useState<TestSuiteSummary | null>(null);
   const [expandedTestId, setExpandedTestId] = useState<string | null>(null);
 
-  const handleDownloadBackup = () => {
-    const jsonStr = exportSystemData();
-    const blob = new Blob([jsonStr], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `RKH_8888_OS_Backup_v${CURRENT_SCHEMA_VERSION}_${new Date().toISOString().split('T')[0]}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
+  const handleExportBackup = async () => {
+    setIsExporting(true);
+    setExportStatus(null);
+    try {
+      const res = await exportAndSaveBackup({ shareAfterSave: true });
+      setExportStatus({
+        success: res.success,
+        message: res.message,
+      });
+    } catch (err) {
+      setExportStatus({
+        success: false,
+        message: `Export failed: ${err instanceof Error ? err.message : 'Unknown error'}`,
+      });
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsImportingFile(true);
+    setImportStatus(null);
+
+    try {
+      const res = await importBackupFromFile(file);
+      setImportStatus(res);
+      if (res.success) {
+        setTimeout(() => {
+          onDataReset();
+          setModeRanges(loadModeRanges());
+          if (fileInputRef.current) fileInputRef.current.value = '';
+        }, 1200);
+      }
+    } catch (err) {
+      setImportStatus({
+        success: false,
+        message: `Failed to import file: ${err instanceof Error ? err.message : 'Unknown error'}. Existing user data preserved.`,
+      });
+    } finally {
+      setIsImportingFile(false);
+    }
   };
 
   const handleImportJSON = () => {
@@ -143,14 +192,14 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onDataReset }) => {
             <div>
               <div className="flex items-center gap-2">
                 <h2 className="font-slab font-bold text-lg text-[#1E2022]">
-                  Phase 6B Analytics, Persistence &amp; Master QA Audit Suite
+                  Phase 7C Master QA &amp; Data Integrity Audit Suite
                 </h2>
                 <span className="text-[10px] font-mono-code px-2 py-0.5 rounded-full bg-[#ECFDF5] text-[#166534] border border-[#BBF7D0] font-semibold">
-                  92 Automated Tests (Phases 1–6B Certified)
+                  95 Automated Tests (Phases 1–7C Certified)
                 </span>
               </div>
               <p className="text-xs text-[#7A746B]">
-                Comprehensive certification: Source analytics derivation, exact completion ratios (7/7 to 0/7), N/A exemption math, Schedule vs KPI metric isolation, Weekly/Monthly/Quarterly/Annual rollups, Not Tracked classification, Future data non-penalization, Streak engine thresholds, 8-entity persistence, rapid-save atomicity, and schema v{CURRENT_SCHEMA_VERSION} backup/restore integrity.
+                Comprehensive certification: Source analytics derivation, exact completion ratios (7/7 to 0/7), N/A exemption math, Schedule vs KPI metric isolation, Weekly/Monthly/Quarterly/Annual rollups, Not Tracked classification, Future data non-penalization, Streak engine thresholds, 8-entity persistence, rapid-save atomicity, schema v{CURRENT_SCHEMA_VERSION} backup/restore integrity, Android native file export/sharing, and non-destructive failure protection.
               </p>
             </div>
           </div>
@@ -296,9 +345,19 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onDataReset }) => {
                 <span className="text-[10px] font-mono-code px-2 py-0.5 rounded-full bg-[#F0EBE0] text-[#1E2022] border border-[#DDD5C5] font-semibold">
                   Schema v{CURRENT_SCHEMA_VERSION}
                 </span>
+                {isNative ? (
+                  <span className="text-[10px] font-mono-code px-2 py-0.5 rounded-full bg-[#ECFDF5] text-[#166534] border border-[#BBF7D0] font-semibold flex items-center gap-1">
+                    <Smartphone className="w-3 h-3" />
+                    <span>Android Native Filesystem &amp; Share</span>
+                  </span>
+                ) : (
+                  <span className="text-[10px] font-mono-code px-2 py-0.5 rounded-full bg-[#EFF6FF] text-[#1E40AF] border border-[#DBEAFE] font-semibold">
+                    Web / PWA Storage
+                  </span>
+                )}
               </div>
               <p className="text-xs text-[#7A746B]">
-                Deterministic local storage • {recordCount} materialized daily snapshots in database
+                Deterministic local-first storage • {recordCount} materialized daily snapshots in database
               </p>
             </div>
           </div>
@@ -314,15 +373,49 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onDataReset }) => {
                 <span>Export System Backup (JSON)</span>
               </div>
               <p className="text-xs text-[#635E55] mt-1 leading-relaxed">
-                Downloads all historical daily records, templates, operating mode windows, idea funnel items, and review audits in full schema v{CURRENT_SCHEMA_VERSION}.
+                {isNative
+                  ? 'Saves validated JSON backup to local cache and opens the Android System Share Sheet to save or send.'
+                  : `Downloads all historical daily records, templates, operating mode windows, idea funnel items, and review audits in full schema v${CURRENT_SCHEMA_VERSION}.`}
               </p>
             </div>
-            <button
-              onClick={handleDownloadBackup}
-              className="px-4 py-2 bg-[#1E2022] hover:bg-[#33373B] text-[#FBF9F5] rounded-xl font-semibold text-xs transition-colors shadow-xs"
-            >
-              Download Full Backup (.json)
-            </button>
+
+            <div className="space-y-2 pt-2">
+              <button
+                onClick={handleExportBackup}
+                disabled={isExporting}
+                className="w-full px-4 py-2.5 bg-[#1E2022] hover:bg-[#33373B] disabled:opacity-50 text-[#FBF9F5] rounded-xl font-semibold text-xs transition-colors shadow-xs flex items-center justify-center gap-2"
+              >
+                {isExporting ? (
+                  <>
+                    <RotateCcw className="w-3.5 h-3.5 animate-spin" />
+                    <span>Generating &amp; Saving Backup...</span>
+                  </>
+                ) : isNative ? (
+                  <>
+                    <Share2 className="w-3.5 h-3.5" />
+                    <span>Export &amp; Share Backup (.json)</span>
+                  </>
+                ) : (
+                  <>
+                    <Download className="w-3.5 h-3.5" />
+                    <span>Download Full Backup (.json)</span>
+                  </>
+                )}
+              </button>
+
+              {exportStatus && (
+                <div
+                  className={`p-2.5 rounded-lg text-xs flex items-start gap-2 ${
+                    exportStatus.success
+                      ? 'bg-[#ECFDF5] text-[#166534] border border-[#BBF7D0]'
+                      : 'bg-[#FEF2F2] text-[#991B1B] border border-[#FECACA]'
+                  }`}
+                >
+                  <span className="font-bold shrink-0">{exportStatus.success ? '✓' : '!'}</span>
+                  <span>{exportStatus.message}</span>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Import Box */}
@@ -333,24 +426,70 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onDataReset }) => {
                 <span>Restore / Import JSON</span>
               </div>
               <p className="text-xs text-[#635E55] mt-1 leading-relaxed">
-                Atomic Pre-Import Validation: If the JSON is malformed or invalid, existing data is 100% preserved.
+                Atomic Pre-Import Validation: If the JSON is malformed, corrupted, or schema mismatch, existing data remains 100% untouched.
               </p>
             </div>
+
             <div className="space-y-2">
-              <textarea
-                rows={2}
-                value={importText}
-                onChange={(e) => setImportText(e.target.value)}
-                placeholder="Paste backup JSON string here..."
-                className="w-full text-xs font-mono-code p-2 rounded-lg border border-[#DDD5C5] bg-[#FFFFFF] focus:outline-hidden focus:border-[#1E2022]"
+              {/* Hidden File Input for Native / Browser File Selection */}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".json,application/json"
+                onChange={handleFileSelect}
+                className="hidden"
+                id="rkh-backup-file-input"
               />
+
+              {/* Primary File Picker Action */}
               <button
-                onClick={handleImportJSON}
-                disabled={!importText.trim()}
-                className="w-full px-4 py-2 bg-[#1E3A8A] hover:bg-[#172554] disabled:opacity-40 text-[#FBF9F5] rounded-xl font-semibold text-xs transition-colors shadow-xs"
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isImportingFile}
+                className="w-full px-4 py-2.5 bg-[#1E3A8A] hover:bg-[#172554] disabled:opacity-50 text-[#FBF9F5] rounded-xl font-semibold text-xs transition-colors shadow-xs flex items-center justify-center gap-2"
               >
-                Validate &amp; Restore From Backup
+                {isImportingFile ? (
+                  <>
+                    <RotateCcw className="w-3.5 h-3.5 animate-spin" />
+                    <span>Validating &amp; Restoring...</span>
+                  </>
+                ) : (
+                  <>
+                    <Upload className="w-3.5 h-3.5" />
+                    <span>Choose Backup File (.json)</span>
+                  </>
+                )}
               </button>
+
+              {/* Raw JSON Paste Toggle */}
+              <div className="pt-1">
+                <button
+                  type="button"
+                  onClick={() => setShowRawPaste(!showRawPaste)}
+                  className="text-[11px] text-[#635E55] hover:text-[#1E2022] underline underline-offset-2 flex items-center gap-1"
+                >
+                  <span>{showRawPaste ? 'Hide raw JSON paste area' : 'Or paste raw JSON text directly'}</span>
+                </button>
+
+                {showRawPaste && (
+                  <div className="space-y-2 pt-2 animate-in fade-in">
+                    <textarea
+                      rows={3}
+                      value={importText}
+                      onChange={(e) => setImportText(e.target.value)}
+                      placeholder="Paste backup JSON string here..."
+                      className="w-full text-xs font-mono-code p-2 rounded-lg border border-[#DDD5C5] bg-[#FFFFFF] focus:outline-hidden focus:border-[#1E2022]"
+                    />
+                    <button
+                      onClick={handleImportJSON}
+                      disabled={!importText.trim()}
+                      className="w-full px-3 py-1.5 bg-[#F0EBE0] hover:bg-[#E5DEC9] disabled:opacity-40 text-[#1E2022] rounded-lg font-semibold text-xs transition-colors border border-[#DDD5C5]"
+                    >
+                      Validate &amp; Restore From Pasted Text
+                    </button>
+                  </div>
+                )}
+              </div>
               
               {importStatus && (
                 <div

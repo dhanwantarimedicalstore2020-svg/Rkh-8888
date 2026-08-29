@@ -11,6 +11,7 @@ import {
   X,
 } from 'lucide-react';
 import { FlexibleWindowCategory, FlexibleWindowLog } from '../../types';
+import { useRegisterBackDismiss } from '../../hooks/useRegisterBackDismiss';
 
 interface FlexibleWindowModalProps {
   isOpen: boolean;
@@ -79,6 +80,8 @@ export const FlexibleWindowModal: React.FC<FlexibleWindowModalProps> = ({
   existingLog,
   dateStr,
 }) => {
+  useRegisterBackDismiss(isOpen, onClose);
+
   const [selectedCat, setSelectedCat] = useState<FlexibleWindowCategory>(
     existingLog?.category || 'Academics'
   );

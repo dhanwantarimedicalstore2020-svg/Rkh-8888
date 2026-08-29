@@ -5,8 +5,8 @@ import { defineConfig } from 'vite';
 
 export default defineConfig(() => {
   return {
-    // Required for GitHub Pages
-    base: '/Rkh-8888/',
+    // Relative base ensures compatibility across GitHub Pages (/Rkh-8888/) and Capacitor Android local asset bundling
+    base: './',
 
     plugins: [
       react(),

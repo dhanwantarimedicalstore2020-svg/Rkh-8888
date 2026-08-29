@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">RKH 8888</string>
+    <string name="title_activity_main">RKH 8888</string>
+    <string name="package_name">com.rkh8888.app</string>
+    <string name="custom_url_scheme">com.rkh8888.app</string>
+</resources>
