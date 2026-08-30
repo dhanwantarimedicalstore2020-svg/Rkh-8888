@@ -34,7 +34,10 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: '17'
+          java-version: '21'
+
+      - name: Verify Java
+        run: java -version
 
       - name: Make Gradle executable
         run: chmod +x android/gradlew
