@@ -1,20 +1,17 @@
 name: Build RKH 8888 Android APK
 
 on:
-  workflow_dispatch:
   push:
-    paths:
-      - "android/**"
-      - "src/**"
-      - "public/**"
-      - "package.json"
-      - "package-lock.json"
-      - "capacitor.config.ts"
-      - "vite.config.ts"
-      - ".github/workflows/build-android.yml"
+    branches:
+      - main
+      - 'rkh-8888-*'
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
 
 jobs:
-  build-android:
+  build-debug-apk:
     name: Build Debug APK
     runs-on: ubuntu-latest
 
@@ -26,34 +23,29 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: npm
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build web application
+        run: npm run build
 
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: "17"
-          cache: gradle
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Build web application
-        run: npm run build
-
-      - name: Sync Capacitor Android
-        run: npx cap sync android
+          java-version: '17'
 
       - name: Make Gradle executable
         run: chmod +x android/gradlew
 
-      - name: Build Debug APK
+      - name: Build Android Debug APK
         working-directory: android
-        run: ./gradlew assembleDebug
+        run: ./gradlew assembleDebug --no-daemon
 
-      - name: Upload APK
+      - name: Upload Debug APK
         uses: actions/upload-artifact@v4
         with:
-          name: RKH-8888-debug-APK
+          name: rkh-8888-debug-apk
           path: android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
